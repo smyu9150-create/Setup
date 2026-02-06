@@ -1,0 +1,2 @@
+# 버전 체크 무시 + 외부 접속 허용(0.0.0.0) 옵션 포함
+DISABLE_VERSION_CHECK=1 GRADIO_SERVER_NAME=0.0.0.0 llamafactory-cli webui
