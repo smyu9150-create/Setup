@@ -1,28 +1,41 @@
 # 버전 체크 무시 + 외부 접속 허용(0.0.0.0) 옵션 포함
 DISABLE_VERSION_CHECK=1 GRADIO_SERVER_NAME=0.0.0.0 llamafactory-cli webui
 
-# 버전 체크를 무시하고 실행
+
+# MERGE
+
 DISABLE_VERSION_CHECK=1 llamafactory-cli export \
-    --model_name_or_path Qwen/Qwen3-VL-2B-Instruct \
-    --adapter_name_or_path . \
-    --template qwen2_vl \
-    --export_dir ./merged_qwen3_model \
-    --export_device cpu \
-    --export_legacy_format false
+  --model_name_or_path Qwen/Qwen3-VL-2B-Instruct \
+  --adapter_name_or_path <LORA_TRAIN_DIR> \
+  --template qwen2_vl \
+  --export_dir <MERGED_MODEL_DIR> \
+  --export_device cpu \
+  --export_legacy_format false
 
-cd ..
+DISABLE_VERSION_CHECK=1 llamafactory-cli export \
+  --model_name_or_path Qwen/Qwen3-VL-2B-Instruct \
+  --adapter_name_or_path ./saves/Qwen3-VL-2B-Instruct/lora/train_2026-02-09-16-13-55 \
+  --template qwen2_vl \
+  --export_dir ./merged_models/ucf_crime_final \
+  --export_device cpu \
+  --export_legacy_format false
+
+#QUANTIZE
+# cd merged_model
+
 tensorrt-edgellm-quantize-llm \
-    --model_dir ./merged_qwen3_model \
-    --output_dir ./quantized/qwen3-vl-2b-int4 \
-    --quantization int4_awq
+  --model_dir ./ucf_crime_final \
+  --output_dir ../quantized/ucf_crime_final-int4_awq \
+  --quantization int4_awq
 
+#export
 tensorrt-edgellm-export-llm \
-    --model_dir ./quantized/qwen3-vl-2b-int4 \
-    --output_dir onnx_models/qwen3-vl-2b-int4
+    --model_dir ./quantized/ucf_crime_final-int4_awq \
+    --output_dir onnx_models/ucf_crime_final-int4_awq 
 
 tensorrt-edgellm-export-visual \
-    --model_dir ./merged_qwen3_model \
-    --output_dir onnx_models/qwen3-vl-2b-int4/visual_enc_onnx
+    --model_dir ./merged_models/ucf_crime_final \
+    --output_dir onnx_models/ucf_crime_final-int4_awq/visual_enc_onnx
 
 
 
@@ -32,3 +45,23 @@ tensorrt-edgellm-quantize-llm \
     --model_dir Qwen/Qwen3-4B \
     --output_dir ./quantized/qwen3-4b \
     --quantization int4_awq
+
+
+
+
+(sam) intern01@Dsrv:/mnt/sdc/intern01/jmk/TensorRT-Edge-LLM$ python - <<'PY'
+> import torch
+> print("torch:", torch.__version__)
+> print("torch cuda:", torch.version.cuda)
+> PY
+torch: 2.9.1+cu128
+torch cuda: 12.8
+(sam) intern01@Dsrv:/mnt/sdc/intern01/jmk/TensorRT-Edge-LLM$ which nvcc
+/home/intern01/miniforge3/envs/sam/bin/nvcc
+(sam) intern01@Dsrv:/mnt/sdc/intern01/jmk/TensorRT-Edge-LLM$ nvcc --version
+nvcc: NVIDIA (R) Cuda compiler driver
+Copyright (c) 2005-2025 NVIDIA Corporation
+Built on Fri_Feb_21_20:23:50_PST_2025
+Cuda compilation tools, release 12.8, V12.8.93
+Build cuda_12.8.r12.8/compiler.35583870_0
+
